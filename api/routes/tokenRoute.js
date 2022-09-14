@@ -14,27 +14,37 @@ router.post('/' , (req , res) => {
             res.sendStatus(403);
         }
         console.log(user);
-        const name = user.name;
+        const name = user.username;
+        const uname = { username: name }
         const sql = 'SELECT refresh_token FROM login WHERE username = ? ;' ;;   
         conn.query(sql, [name] , (err, result) => {
             if(err) {
                 res.sendStatus(400);
             }
-            const refreshTokens = result[0].refresh_token;
-            if (!refreshTokens == refreshToken ) {
+            const refreshTokenDb = result[0].refresh_token;
+            if (refreshTokenDb != refreshToken ) {
                 return res.sendStatus(403);
             }
-            const accessToken = generateAccessToken({ name: name });           
-            res.status(201).json({
-                message: 'Access token generated successfully!',
-                accessToken: accessToken
-            })            
+            const accessToken = generateAccessToken(uname);     
+            const refreshTokenNew = jwt.sign(uname , process.env.REFRESH_TOKEN_SECRET);
+            const sql = 'UPDATE login SET refresh_token = ? WHERE username = ? '
+            conn.query(sql , [refreshTokenNew, name] , (err, result2) => {
+                console.log(refreshTokenNew);
+                if(err) {
+                    throw err;
+                }
+                res.status(201).json({
+                    message: 'Access token generated successfully!',
+                    accessToken: accessToken,
+                    refreshToken: refreshTokenNew
+                })
+            })           
         })
     }) 
 })
 
 function generateAccessToken (user) {
-    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30s'});
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '500s'});
 }
 
 module.exports = router;

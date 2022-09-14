@@ -11,25 +11,35 @@ router.post('/', async (req ,res ,next ) => {
         email: req.body.email,
         password: req.body.password
     }
-   // console.log(user);
-    const sql = 'SELECT password  FROM login WHERE username = ? OR email = ? ;' ;
-    conn.query(sql , [user.username , user.email] , async (err, result) => {
+    
+    const sql = 'SELECT password, username, name FROM login WHERE username = ? OR email = ? ';
+    conn.query(sql , [ user.username , user.email] , async (err, result1) => {
+        const uname = { username: result1[0].username };
         if(err) {
             throw err;
         }
-        if (result == null) {
-            res.status(400).json({
+        if(!result1){
+            res.status(404).json({
                 message: 'User not found'
             })
         }
         try {
-            if( await bcrypt.compare(user.password, result[0].password)){
-                res.status(200).json({
-                    message: 'Login successfull!'
+            if (await bcrypt.compare(user.password, result1[0].password)) {
+                const accessToken = generateAccessToken(uname);
+                const refreshToken = jwt.sign(uname , process.env.REFRESH_TOKEN_SECRET);
+                const sql = 'UPDATE login SET refresh_token = ? WHERE username = ? OR email = ?'
+                conn.query(sql , [refreshToken, user.username , user.email] , (err, result2) => {
+                    if(err) {
+                        throw err;
+                    }
+                    res.status(200).json({
+                        message: "Login successfull !",
+                        welcome: result1[0].name,
+                        accessToken: accessToken,
+                        refreshToken: refreshToken
+                    })
                 })
-        // 
-
-        // 
+                
             } else {
                 res.status(400).json({
                     message: 'Incorrect password'
@@ -40,7 +50,13 @@ router.post('/', async (req ,res ,next ) => {
                 errorMessage: 'Error'
             })
         }
+
+        
     })
 })
+
+function generateAccessToken(user) {
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET , { expiresIn: '500s'});
+}
 
 module.exports = router;

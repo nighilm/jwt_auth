@@ -5,14 +5,14 @@ const router = express.Router();
 
 
 router.get('/', authenticateToken, (req ,res) => {
-    const sql = 'SELECT email FROM login WHERE username = ? '
-    conn.query(sql, [req.user.name] , (err, result) => {
+    const sql = 'SELECT name FROM login WHERE username = ? '
+    conn.query(sql, [req.user.username] , (err, result) => {
         if(err) {
             res.sendStatus(400);
         }
+        console.log(result);
         res.status(200).json({
-            message : "welcome" + req.user.name,
-            email: result[0].email
+            message : "welcome " + result[0].name
         })
     })
 })
@@ -28,6 +28,7 @@ function authenticateToken(req , res , next ) {
             return res.sendStatus(403);
         }
         req.user = user;
+        console.log(req.user);
         next();
     })
 }

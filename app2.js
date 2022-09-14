@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 
 
 const postsRoute = require('./api/routes/postsRoute');
+const logoutRoute = require('./api/routes/logoutRoute');
+
 
 
 app2.use(bodyParser.urlencoded({ extended: true }));
@@ -23,6 +25,7 @@ app2.use((req ,res ,next) => {
 
 
 app2.use( '/posts' ,postsRoute);
+app2.use( '/logout' ,logoutRoute);
 
 app2.use((req , res , next) => {
     const error = new Error('Not Found!');
