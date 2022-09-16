@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 
 const postsRoute = require('./api/routes/postsRoute');
 const logoutRoute = require('./api/routes/logoutRoute');
+const axiosRoute = require('./api/routes/axiosTest');
 
 
 
@@ -26,6 +27,7 @@ app2.use((req ,res ,next) => {
 
 app2.use( '/posts' ,postsRoute);
 app2.use( '/logout' ,logoutRoute);
+app2.use( '/axios' ,axiosRoute);
 
 app2.use((req , res , next) => {
     const error = new Error('Not Found!');
